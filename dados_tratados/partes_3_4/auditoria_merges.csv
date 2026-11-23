@@ -1,0 +1,5 @@
+﻿relacionamento,chave,linhas_antes,linhas_depois,itens_sem_correspondencia
+items + orders,order_id,112650,112650,0
+items + products,product_id,112650,112650,0
+items + sellers,seller_id,112650,112650,0
+items + avaliações agregadas,order_id,112650,112650,942
