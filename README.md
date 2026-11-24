@@ -6,8 +6,7 @@ Trabalho de Ciência de Dados, período 2026/2, briefing 5. A base relaciona ven
 
 - [Carlos Gabriel Raposo Landim](https://github.com/karlitus222) — partes 3 e 4: relacionamentos e tabela analítica.
 - [David Gabriel](https://github.com/DavidGabriel333) — preparação das bases no notebook compartilhado.
-- [Roger-dev-eng](https://github.com/Roger-dev-eng) — integrante da equipe.
-
+- [Roger-dev-eng](https://github.com/Roger-dev-eng) — Realizar as análises e desenvolver o pipeline.
 ## O que está pronto
 
 | Etapa | Situação nesta versão |
