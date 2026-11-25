@@ -17,7 +17,7 @@ Trabalho de Ciência de Dados, período 2026/2, briefing 5. A base relaciona ven
 | 3. Relacionar as tabelas | Junções com validação de cardinalidade e auditoria |
 | 4. Construir a tabela analítica | Base vendedor–pedido, indicadores e exportação dos CSVs |
 | 5. Realizar as análises | Pendente |
-| 6. Desenvolver o pipeline completo `preprocessar()` | Pendente; funções das partes 3 e 4 disponíveis |
+| 6. Desenvolver o pipeline completo `preprocessar()` | Implementado em `pipeline/`; coordena limpeza, relacionamentos, tabela analítica, resumo e exportação |
 | 7. Construir o Streamlit | Pendente |
 | 8. Finalizar documentação e apresentação | Parcial: instruções, dicionário e verificação disponíveis |
 
@@ -27,6 +27,7 @@ O relatório final, o diário de decisões, as respostas às três perguntas e a
 
 - [`notebooks/01_Preparacao_Dados_Olist.ipynb`](notebooks/01_Preparacao_Dados_Olist.ipynb): versão integrada do Colab, com 58 células. Contém a preparação anterior e as partes 3 e 4 ao final.
 - [`notebooks/02_Relacionamentos_e_Tabela_Analitica.ipynb`](notebooks/02_Relacionamentos_e_Tabela_Analitica.ipynb): apenas as partes 3 e 4, com saídas da execução local. É uma alternativa para quem já executou a preparação; depende de `dados_limpos` e `PASTA_TRATADOS`.
+- [`pipeline/`](pipeline/): `pipeline.py` coordena as etapas; `funcoes.py` contém limpeza, relacionamentos, construção da tabela analítica e resumo.
 - [`relacionamentos.py`](relacionamentos.py): funções reutilizáveis para o futuro pipeline.
 - [`validar_relacionamentos.py`](validar_relacionamentos.py): seis testes de casos especiais.
 - [`dados_brutos/`](dados_brutos): CSVs de origem usados pelo notebook.
@@ -53,13 +54,14 @@ python -m unittest validar_relacionamentos -v
 ```
 
 ```python
-from relacionamentos import relacionar_tabelas, construir_tabela_analitica, resumir_vendedores
+from pipeline import preprocessar, resumir_vendedores
 
-# dados_limpos é o dicionário de DataFrames produzido pela preparação.
-itens, auditoria = relacionar_tabelas(dados_limpos)
-tabela = construir_tabela_analitica(itens)
+# As cinco variáveis são DataFrames carregados dos CSVs brutos.
+tabela = preprocessar(orders, items, products, sellers, reviews)
 resumo = resumir_vendedores(tabela)
 ```
+
+A pipeline salva a tabela analítica e o resumo em `tabelas_analiticas/`.
 
 Para abrir o notebook em Jupyter local, adapte a montagem do Drive e o caminho `PASTA_PROJETO` às pastas da máquina.
 
