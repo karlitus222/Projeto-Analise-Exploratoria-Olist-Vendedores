@@ -1,118 +1,74 @@
-# Streamlit - Gestão de vendedores parceiros
+# Painel Streamlit — vendedores Olist
 
-Etapa 7 de Guilherme Estrela. Grupo 04, Briefing 5.
+**Responsável:** Guilherme Estrela · Etapa 7 · Grupo 04 · Briefing 5.
 
-Painel organizado em uma pasta própria, com a base final necessária para executar a versão atual.
-Esta entrega está isolada na pasta streamlit do repositório dos colaboradores. Os arquivos das outras etapas foram preservados. Esta pasta não contém o pipeline, o notebook ou o relatório da etapa 8.
+Esta pasta contém a versão demonstrada em 27/11/2026: painel, CSV utilizado, dependências e testes. As outras etapas do grupo permanecem fora desta pasta.
 
-## Abrir no VS Code
+## Comece aqui
 
-Abrir esta pasta `streamlit`. Usar Python 3.11 e executar no terminal:
+1. **Para abrir o painel:** siga os comandos abaixo.
+2. **Para mudar filtros, gráficos ou textos:** consulte o mapa de arquivos desta página.
+3. **Para conectar a base do pipeline da equipe:** leia primeiro o [guia de continuidade](docs/continuar_desenvolvimento.md#base-desta-versão-e-integração-com-o-pipeline-da-equipe).
+4. **Para consultar origem dos dados e verificações:** abra o [índice da documentação](docs/README.md).
+
+## Rodar no computador
+
+Depois de clonar o repositório, abra o terminal na raiz dele. Use **Python 3.11**:
 
 ```powershell
+cd streamlit
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-Abrir o endereço exibido no terminal. Normalmente é http://localhost:8501; se a porta estiver ocupada, usar a porta indicada pelo Streamlit.
-Para encerrar, pressionar `Ctrl+C` no terminal. Não executar `app.py` pelo botão comum do Python.
+Abra o endereço mostrado no terminal. Para encerrar, pressione `Ctrl+C`. Nas próximas vezes, execute apenas o último comando, dentro de `streamlit/`.
 
-## O que o painel mostra
+No Linux ou macOS, substitua `.\.venv\Scripts\python.exe` por `.venv/bin/python`.
 
-Os quatro requisitos da entrega foram conferidos em 27/11/2026:
+Use o ambiente virtual e o `requirements.txt` **desta pasta**. As dependências da raiz pertencem às outras etapas.
 
-| Requisito | Onde está atendido |
+## Onde mexer
+
+| Quero ajustar… | Arquivo |
 |---|---|
-| Uma página para cada pergunta | Três arquivos em `pages/`, além da visão geral |
-| Pelo menos dois filtros | Ano, mês, vendedor e período. UF fixa em PI por solicitação do responsável |
-| Conclusão em linguagem de negócio por página | Síntese descritiva calculada para os filtros atuais |
-| Dados vindos do CSV final do repositório | `data/processed/tabela_analitica.csv`, conferido contra o commit `f56b0fe` |
+| Filtros, indicadores, tabelas ou organização das páginas | [src/dashboard.py](src/dashboard.py) |
+| Gráficos e suas interações | [src/visualizations.py](src/visualizations.py) |
+| Conclusões e nome fictício do vendedor | [src/presentation.py](src/presentation.py) |
+| Fórmulas e regras das métricas | [src/analysis.py](src/analysis.py) |
+| Tema e opções de aparência | [.streamlit/config.toml](.streamlit/config.toml) |
+| Dados da demonstração | [data/processed/tabela_analitica.csv](data/processed/tabela_analitica.csv) |
+| Verificação automática do painel | [tests/test_dashboard.py](tests/test_dashboard.py) |
 
-- **Visão geral:** pedidos distintos, despachos elegíveis, taxa de atraso e pedidos com nota.
-- **Atrasos no despacho:** ranking por vendedor, volume mínimo e evolução mensal.
-- **Atrasos e avaliações:** notas com e sem atraso, comparação entre vendedores e recorte por atraso ao cliente.
-- **Critérios de acompanhamento:** TAD acima de 10%, nota abaixo de 3,8, tempo médio em dias úteis e simulador.
+`app.py` e os três arquivos de `pages/` são as entradas das páginas. Eles chamam a interface compartilhada em `src/dashboard.py`; os filtros não precisam ser alterados em quatro arquivos separados.
 
-Atualização de 27/11/2026: a análise usa somente vendedores do PI. A base contém **12 pedidos, um vendedor, 11 despachos elegíveis e 11 avaliações elegíveis** nesse estado.
-Não há atrasos de despacho entre os pedidos elegíveis do PI. Não é possível comparar grupos com e sem atraso nesse recorte.
+## O que existe em cada aba
 
-Ano e estado ficam no topo; a UF apresenta apenas PI e não pode ser alterada.
-O bloco “Mais filtros: mês, período e vendedor” reúne os controles adicionais. As seleções são aplicadas em conjunto e permanecem ao trocar de página.
-As sínteses descritivas acompanham os filtros. As respostas nacionais originais foram preservadas em reports/conclusoes_equipe.json como referência documental, sem aparecer na interface.
-As datas aparecem como dia/mês/ano. Somente 2018 aparece como ano selecionável, porque os pedidos do PI estão nesse ano.
+| Aba | Conteúdo |
+|---|---|
+| Visão geral | Indicadores, gráfico mensal e tabela mensal |
+| Atrasos no despacho | Ranking por vendedor, volume mínimo e evolução mensal |
+| Atrasos e avaliações | Notas por situação do despacho, gráfico de vendedores e tabelas |
+| Critérios de acompanhamento | Janela histórica de 30 dias, gráfico, tabela e simulador |
 
-O vendedor é exibido como **Loja Aurora**, um nome fictício para demonstração. Seu ID original é mantido no CSV, nas tabelas e nos detalhes dos gráficos.
-Não foram inventados vendedores nem pedidos adicionais. O recorte atual não permite um ranking entre vários parceiros.
-O volume mínimo da página de atrasos limita somente o ranking.
-O simulador altera o cenário exibido, sem modificar os critérios fixos ou emitir advertências.
-O botão de download exporta o recorte atual em CSV.
+Os filtros recalculam os dados exibidos e permanecem ao trocar de página. Trocar o ano restaura todos os meses e o período anual completo. Janeiro a dezembro estão disponíveis. Gráficos têm detalhes e zoom; tabelas permitem consulta, ordenação e download. O zoom não altera os indicadores, e o simulador altera somente o cenário identificado.
 
-Os gráficos usam Altair: detalhes ao passar o cursor ou tocar, destaque por clique, zoom e arraste. Dois cliques restauram a escala.
-O zoom altera apenas a visualização; os filtros do topo determinam os indicadores.
-O gráfico de vendedores mostra também um ponto para que o valor de 0% continue visível e tenha detalhes acessíveis.
+## Atenção à base de dados
 
-## Pastas
+O painel lê **`streamlit/data/processed/tabela_analitica.csv`**, uma cópia da base da demonstração, com 41 colunas. Ele **ainda não lê** `tabelas_analiticas/tabela_vendedor_pedido.csv`, a saída de 46 colunas do pipeline dos colaboradores. A integração exige conferir os campos e as regras; o [guia de continuidade](docs/continuar_desenvolvimento.md) explica os pontos de adaptação.
 
-```text
-streamlit/
-  app.py                         Entrada do painel
-  pages/                         Três páginas de análise
-  src/                           Interface, métricas e gráficos compartilhados
-  data/processed/                Tabela analítica atual
-  reports/conclusoes_equipe.json Resumos nacionais de referência
-  docs/                          Origem da base e verificações desta cópia
-  tests/                         Testes do painel e dos filtros
-  .streamlit/config.toml         Tema e navegação
-  requirements.txt              Dependências com versões fixas
-  uso_de_ia.md                   Registro da assistência
-```
+O recorte atual é fixo em **PI**: 12 pedidos de 2018, um vendedor, 11 despachos elegíveis e 11 avaliações. Por isso, “Todos os anos” e “2018” têm o mesmo total. Junho e setembro a dezembro não têm registros; o painel mostra 0 pedidos e explica a ausência. Loja Aurora é um nome fictício, com o ID original preservado.
 
-`src/load_data.py` foi mantido porque fornece a referência à pasta do projeto usada pelo painel.
-Os módulos compartilhados e a base são dependências da integração; sua presença não reatribui as etapas anteriores a Guilherme.
+## Conferir antes de publicar uma alteração
 
-## Compatibilidade com o repositório
-
-Referência consultada em **25/11/2026**: commit `f56b0fe1a0e2447b6004da932e133388b680d1fe`, publicado em 24/11/2026.
-Esse commit atualizou documentação e links. Os dados, os cálculos e as páginas permaneceram iguais à referência anterior.
-Os links desta entrega usam o nome atual em minúsculas:
-https://github.com/guilhermeestrela10/projeto-analise-exploratoria-ciencia-de-dados
-
-A tabela mantém uma linha por pedido-vendedor, 100.010 linhas e 41 colunas.
-O arquivo completo permanece intacto; a restrição ao PI é aplicada apenas na interface.
-As regras de elegibilidade, avaliação única e métricas foram preservadas.
-As respostas originais da base nacional permanecem em reports/conclusoes_equipe.json como referência documental; a interface mostra apenas conclusões do recorte filtrado.
-As sínteses descritivas principais usam os dados do recorte PI e acompanham os filtros.
-A janela de 30 dias termina na última compra do recorte histórico, não na data atual.
-Dias úteis contam segunda a sexta, sem feriados. Não foi definido limite automático para o tempo médio.
-A data de despacho pertence ao pedido inteiro; associação entre atraso e nota não demonstra causalidade.
-
-Se o grupo publicar outra base, conferir os nomes, tipos, granularidade e regras antes de substituí-la.
-Se os resultados mudarem, revisar também os resumos em `reports/conclusoes_equipe.json`.
-
-## Conferir os testes
+Dentro de `streamlit/`:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-Os testes usam a tabela incluída e não precisam dos CSVs brutos.
-As evidências desta versão ficam em [docs/verificacao.md](docs/verificacao.md).
-O commit e as assinaturas dos arquivos de referência ficam em [docs/origem_da_base.json](docs/origem_da_base.json).
+A última validação da aplicação passou nos **22 testes**. Depois de alterar a base ou liberar outras UFs, atualize também as expectativas dos testes e as conclusões. Confira a troca de mês e de página no navegador.
 
-## Mostrar aos colegas
+Para compartilhar o painel, consulte [docs/compartilhamento.md](docs/compartilhamento.md). Ter o código no GitHub não cria uma hospedagem automaticamente.
 
-A revisão local de 27/11 está aberta em http://127.0.0.1:8503/ neste computador.
-Para acesso pelo celular ou computador de outra pessoa, seguir [docs/compartilhamento.md](docs/compartilhamento.md).
-O link temporário não faz push no GitHub e exige que o computador e o túnel permaneçam ligados.
-Links temporários só funcionam enquanto o computador e o túnel estiverem ativos. Para gerar um novo endereço, seguir as instruções de compartilhamento.
-
-
-### Filtros de ano e mês
-
-Selecionar o ano restaura Todos os meses e o intervalo de 01/01 a 31/12. Os doze meses estão disponíveis em todas as páginas. Meses sem registros exibem 0 pedidos, tabela vazia e explicação; médias e taxas ficam sem dados. Todos os anos e 2018 têm o mesmo total de 12 pedidos no PI, pois é o único ano observado. Junho e setembro a dezembro não têm pedidos nesta base.
-
-
-## Continuar o trabalho em equipe
-
-Esta é a versão demonstrada em 27/11/2026, publicada em uma pasta independente. As instruções para executar a partir da raiz do repositório, alterar o painel e integrar o CSV do pipeline dos colegas estão em [docs/continuar_desenvolvimento.md](docs/continuar_desenvolvimento.md).
+Fonte: Olist / Kaggle, sob CC BY-NC-SA 4.0. [Origem do CSV](docs/origem_da_base.json) · [Histórico de verificações](docs/verificacao.md) · [Registro de assistência](uso_de_ia.md).

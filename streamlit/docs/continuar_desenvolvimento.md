@@ -4,6 +4,8 @@ Responsável pela etapa 7: Guilherme Estrela. Versão da demonstração de 27/11
 
 Esta pasta é independente. A publicação acrescenta somente `streamlit/`; não altera os notebooks, o pipeline, as tabelas analíticas nem a documentação da raiz do repositório.
 
+[Voltar ao painel](../README.md) · [Índice da documentação](README.md)
+
 ## Executar depois de clonar o repositório
 
 No terminal, entrar na pasta `streamlit` e usar Python 3.11. Criar um ambiente próprio evita conflito com as dependências das outras etapas.
@@ -29,7 +31,7 @@ O painel lê seu CSV incluído e não precisa executar o pipeline nem baixar dad
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `app.py` | Página de visão geral |
+| `app.py` | Entrada da visão geral; chama a interface compartilhada |
 | `pages/` | Entrada das três páginas do briefing |
 | `src/dashboard.py` | Filtros, indicadores, tabelas, navegação e organização das páginas |
 | `src/analysis.py` | Cálculos sobre os dados filtrados |
@@ -38,6 +40,12 @@ O painel lê seu CSV incluído e não precisa executar o pipeline nem baixar dad
 | `data/processed/tabela_analitica.csv` | Base da versão demonstrada |
 | `tests/test_dashboard.py` | Testes dos filtros e dos dados exibidos nas quatro páginas |
 | `.streamlit/config.toml` | Tema e opções do Streamlit |
+
+## Como uma página recebe os dados
+
+`app.py` ou um arquivo de `pages/` chama `render()` em `src/dashboard.py`. A interface lê o CSV, aplica os filtros e passa esse recorte para `src/analysis.py`. As tabelas usam esses resultados; os gráficos são montados em `src/visualizations.py`, e as conclusões em `src/presentation.py`. Ao mudar uma regra, confira os três resultados: indicadores, tabelas e gráficos/conclusões.
+
+Para alterar somente a interface, mantenha a base incluída e execute os testes. Para integrar o pipeline, siga a seção abaixo antes de trocar o CSV.
 
 ## Base desta versão e integração com o pipeline da equipe
 

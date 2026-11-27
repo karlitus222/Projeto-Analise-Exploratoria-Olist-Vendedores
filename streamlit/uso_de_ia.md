@@ -59,3 +59,8 @@ Ajuste assistido para oferecer todos os meses, restaurar o ano completo ao troca
 ## Registro 17 — 27/11/2026
 
 Preparação assistida da entrega da etapa 7 na pasta streamlit/ do repositório dos colaboradores, por solicitação de Guilherme. Foram incluídos código, CSV utilizado na demonstração, testes, dependências e instruções de continuidade. README atualizado para a entrega e diferenças do contrato de dados documentadas. Os arquivos das outras etapas foram preservados. A validação executou os 22 testes na cópia de publicação.
+
+
+## Registro 18 — 27/11/2026
+
+Organização assistida da documentação para os colaboradores: README com instruções iniciais e mapa dos arquivos, índice de documentos e explicação do fluxo dos dados. Apenas documentação; código, CSV e arquivos das outras etapas preservados.
