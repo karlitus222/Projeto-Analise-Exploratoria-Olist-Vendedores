@@ -1,0 +1,46 @@
+{
+  "consultado_em": "2026-11-25",
+  "repositorio": "https://github.com/guilhermeestrela10/projeto-analise-exploratoria-ciencia-de-dados",
+  "branch": "main",
+  "commit": "f56b0fe1a0e2447b6004da932e133388b680d1fe",
+  "commit_anterior_conferido": "7d8dd43249d6338c549399c5fdd712a469da5d13",
+  "mudancas_no_commit": "Documentação, links e navegação do README; dados e código analítico preservados.",
+  "repositorio_alterado": false,
+  "objetos_git_preservados": {
+    ".streamlit/config.toml": "b1c2e0516848b23381febb8138654564edf21be0",
+    "app.py": "d55dd8236b4fe0acf8354b922fd68d8518332f99",
+    "data/processed/tabela_analitica.csv": "ec3592f24ac36ced3b154374c8e7b55fc6bee80a",
+    "pages/1_Atrasos_no_Despacho.py": "6029de0d8767b760970ca041b05cd974a736d89b",
+    "pages/2_Atrasos_e_Avaliacoes.py": "b25742087beb3f11ed9e4edffc4b6536e91a3f1b",
+    "pages/3_Criterios_para_Vendedores.py": "99e75b2b9b474f13edd9f5602d127984bebc0cf5",
+    "reports/conclusoes_equipe.json": "7c11d28c24ccc3599ef241f10771bb6bbc8ae271",
+    "src/__init__.py": "1eb3d39a3708b29149668c3e588bc9333716ff9b",
+    "src/analysis.py": "a81679d7b9657fe8093cc0043649fe5c98ffa230",
+    "src/load_data.py": "b38a5556b1acab3095d4be57c4c9f855149e6b85"
+  },
+  "arquivo": "data/processed/tabela_analitica.csv",
+  "bytes": 38273457,
+  "sha256": "dfad55639d8981825300bce364f6faf7a7e1ee45efda0d696ce859a73b7d958c",
+  "linhas": 100010,
+  "colunas": 41,
+  "pedidos_distintos": 98666,
+  "despachos_elegiveis": 94955,
+  "pedidos_elegiveis_com_nota": 94257,
+  "revisado_em": "2026-11-27",
+  "arquivos_de_interface_modificados": [
+    "src/dashboard.py",
+    "src/visualizations.py",
+    "src/presentation.py"
+  ],
+  "recorte_da_interface": {
+    "seller_state": "PI",
+    "pedidos": 12,
+    "vendedores": 1,
+    "despachos_elegiveis": 11,
+    "avaliacoes_elegiveis": 11,
+    "despachos_atrasados": 0,
+    "nota_media": 4.0,
+    "nome_ficticio": "Loja Aurora",
+    "seller_id_original": "47efca563408aae19bb7206c2d969ea9"
+  }
+}
