@@ -1,4 +1,5 @@
 # [IA] registro 22
+# [IA] registro 23: expectativas dos testes de filtros e conclusões.
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -8,14 +9,15 @@ from streamlit.testing.v1 import AppTest
 
 from src.analysis import delay_ranking, filter_data, monitoring_metrics, review_comparison, seller_metrics
 from src.dashboard import FINAL_CSV
+from src.presentation import ORIGINAL_CONCLUSIONS
 from src.visualizations import ranking_chart
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGES = [
-    "pages/1_Atrasos_no_Despacho.py",
-    "pages/2_Atrasos_e_Avaliacoes.py",
-    "pages/3_Criterios_para_Vendedores.py",
+    ("pages/1_Atrasos_no_Despacho.py", "atrasos"),
+    ("pages/2_Atrasos_e_Avaliacoes.py", "avaliacoes"),
+    ("pages/3_Criterios_para_Vendedores.py", "criterios"),
 ]
 
 
@@ -130,8 +132,8 @@ def test_filters_apply_state_category_and_inclusive_dates(indicator_data):
         date(2018, 1, 4),
     )
 
-    assert set(filtered.seller_id) == {"prioritario"}
-    assert len(filtered) == 3
+    assert set(filtered.seller_id) == {"prioritario", "volume-baixo"}
+    assert len(filtered) == 6
     assert filtered.order_purchase_timestamp.min() == date(2018, 1, 2)
     assert filtered.order_purchase_timestamp.max() == date(2018, 1, 4)
 
@@ -149,8 +151,8 @@ def open_page(page):
     return app
 
 
-@pytest.mark.parametrize("page", PAGES)
-def test_briefing_pages_load_final_csv_show_filters_and_original_conclusion(page):
+@pytest.mark.parametrize("page, conclusion_key", PAGES)
+def test_briefing_pages_load_final_csv_show_filters_and_original_conclusion(page, conclusion_key):
     assert FINAL_CSV.is_file()
     app = open_page(page)
 
@@ -167,5 +169,5 @@ def test_briefing_pages_load_final_csv_show_filters_and_original_conclusion(page
     category_filter = selectboxes["Categoria do produto"]
     assert state_filter.value == "Todos os estados"
     assert category_filter.value == "Todas as categorias"
-    assert any("Conclusão" in element.value for element in app.info)
+    assert ORIGINAL_CONCLUSIONS[conclusion_key] in [element.value for element in app.info]
     assert app.get("arrow_vega_lite_chart")
