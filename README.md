@@ -44,7 +44,7 @@ As três perguntas de negócio são:
 ## Links
 
 - **Base de dados:** [Brazilian E-Commerce Public Dataset by Olist no Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
-- **Painel publicado:** [Painel no Streamlit](https://olist-vendedores-grupo04.streamlit.app/)
+- **Painel publicado:** [Gestão de Vendedores Parceiros — Grupo 04](https://olist-vendedores-grupo04.streamlit.app/).
 
 ## Objetivo
 
@@ -172,6 +172,19 @@ O painel multipágina apresenta:
 | Critérios para vendedores | Classificação baseada em volume e limites de acompanhamento |
 
 O CSV utilizado pelo painel é `tabelas_analiticas/tabela_vendedor_pedido.csv`. Os filtros recalculam os indicadores, gráficos, tabelas e sínteses para o recorte selecionado.
+
+### Publicação no Streamlit Community Cloud
+
+Em [Streamlit Community Cloud](https://share.streamlit.io/), crie um aplicativo a partir do GitHub com estas configurações:
+
+| Campo | Valor |
+| --- | --- |
+| Repository | `karlitus222/Projeto-Analise-Exploratoria-Olist-Vendedores` |
+| Branch | `main` |
+| Main file path | `streamlit/app.py` |
+| Python version (Advanced settings) | `3.12` |
+
+As dependências estão em `streamlit/requirements.txt`. A tabela analítica já está no repositório; o painel não exige secrets ou credenciais do Kaggle. Alterações enviadas à branch `main` atualizam a aplicação publicada.
 
 ## Processo de tratamento dos dados
 
