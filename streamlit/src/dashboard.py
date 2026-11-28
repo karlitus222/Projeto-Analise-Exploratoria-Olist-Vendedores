@@ -1,5 +1,5 @@
 """Interface gerencial baseada nos indicadores da etapa 6."""
-# [IA] registro 22
+# [IA] registro 15
 from pathlib import Path
 
 import pandas as pd

@@ -1,3 +1,5 @@
+# [IA] registro 2 e 16
+
 import pandas as pd
 
 
@@ -13,13 +15,67 @@ COLUNAS_DATA = {
     "reviews": ["review_creation_date", "review_answer_timestamp"],
 }
 
+COLUNAS_NUMERICAS = {
+    "items": ["price", "freight_value"],
+    "products": [
+        "product_name_lenght",
+        "product_description_lenght",
+        "product_photos_qty",
+        "product_weight_g",
+        "product_length_cm",
+        "product_height_cm",
+        "product_width_cm",
+    ],
+    "reviews": ["review_score"],
+}
+
+ESTADOS_BR = [
+    "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO",
+    "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR",
+    "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO",
+]
+
+STATUS_PEDIDO = [
+    "approved",
+    "canceled",
+    "created",
+    "delivered",
+    "invoiced",
+    "processing",
+    "shipped",
+    "unavailable",
+]
+
+def sinalizar_outliers_iqr(serie):
+    """Marca outliers pelo IQR sem remover observações válidas."""
+    valores = pd.to_numeric(serie, errors="coerce")
+    validos = valores.dropna()
+    flags = pd.Series(pd.NA, index=serie.index, dtype="boolean")
+    if validos.empty:
+        return flags
+
+    q1 = validos.quantile(0.25)
+    q3 = validos.quantile(0.75)
+    limite_inferior = q1 - 1.5 * (q3 - q1)
+    limite_superior = q3 + 1.5 * (q3 - q1)
+    flags.loc[validos.index] = (
+        validos.lt(limite_inferior) | validos.gt(limite_superior)
+    )
+    return flags
+
 
 def limpar_dados(dados_brutos):
-    # Copia as bases, remove linhas iguais e prepara datas e notas.
+    # Mantém os nulos para não confundir informação ausente com zero ou pontualidade.
     dados = {
         nome: df.drop_duplicates().copy()
         for nome, df in dados_brutos.items()
     }
+
+    for df in dados.values():
+        colunas_texto = df.select_dtypes(include=["object", "string"]).columns
+        for coluna in colunas_texto:
+            valores = df[coluna].astype("string").str.strip()
+            df[coluna] = valores.replace("", pd.NA)
 
     for tabela, colunas in COLUNAS_DATA.items():
         for coluna in colunas:
@@ -29,12 +85,104 @@ def limpar_dados(dados_brutos):
                     errors="coerce",
                 )
 
-    dados["reviews"]["review_score"] = pd.to_numeric(
-        dados["reviews"]["review_score"],
-        errors="coerce",
-    )
-    # [IA] registro 2
+    for tabela, colunas in COLUNAS_NUMERICAS.items():
+        for coluna in colunas:
+            if coluna in dados[tabela].columns:
+                dados[tabela][coluna] = pd.to_numeric(
+                    dados[tabela][coluna],
+                    errors="coerce",
+                )
+
+    for coluna in ["price", "freight_value"]:
+        if coluna in dados["items"].columns:
+            dados["items"][coluna] = dados["items"][coluna].mask(
+                dados["items"][coluna].lt(0)
+            )
+    for coluna in [
+        "product_weight_g",
+        "product_length_cm",
+        "product_height_cm",
+        "product_width_cm",
+        "product_photos_qty",
+    ]:
+        if coluna in dados["products"].columns:
+            dados["products"][coluna] = dados["products"][coluna].mask(
+                dados["products"][coluna].le(0)
+            )
+    if "review_score" in dados["reviews"].columns:
+        dados["reviews"]["review_score"] = dados["reviews"][
+            "review_score"
+        ].where(dados["reviews"]["review_score"].between(1, 5))
+
+    for coluna in ["price", "freight_value"]:
+        if coluna in dados["items"].columns:
+            dados["items"][f"{coluna}_outlier_iqr"] = sinalizar_outliers_iqr(
+                dados["items"][coluna]
+            )
+
+    if "seller_state" in dados["sellers"].columns:
+        dados["sellers"]["seller_state"] = (
+            dados["sellers"]["seller_state"].astype("string").str.upper()
+        )
+    if "order_status" in dados["orders"].columns:
+        dados["orders"]["order_status"] = (
+            dados["orders"]["order_status"].astype("string").str.lower()
+        )
+
     return dados
+
+
+def codificar_atributos(tabela):
+    """Cria variáveis indicadoras estáveis para estado e status do pedido."""
+    resultado = tabela.copy()
+    categorias = {
+        "seller_state": [*ESTADOS_BR, "sem_estado", "outro"],
+        "order_status": [*STATUS_PEDIDO, "sem_status", "outro"],
+    }
+
+    for coluna, valores_permitidos in categorias.items():
+        valores = resultado[coluna].astype("string")
+        if coluna == "seller_state":
+            valores = valores.str.strip().str.upper()
+        else:
+            valores = valores.str.strip().str.lower()
+
+        valor_ausente = "sem_estado" if coluna == "seller_state" else "sem_status"
+        valores = valores.fillna(valor_ausente)
+        valores = valores.where(valores.isin(valores_permitidos), "outro")
+
+        for categoria in valores_permitidos:
+            nome_coluna = f"{coluna}__{categoria}"
+            resultado[nome_coluna] = valores.eq(categoria).astype("int8")
+
+    return resultado
+
+
+def normalizar_atributos(tabela):
+    """Adiciona versões MinMax e Z-score sem substituir os valores originais."""
+    resultado = tabela.copy()
+    for origem, prefixo in [
+        ("atraso_despacho_dias", "atraso_despacho"),
+        ("valor_total", "valor_total"),
+    ]:
+        valores = pd.to_numeric(resultado[origem], errors="coerce")
+        minimo = valores.min()
+        maximo = valores.max()
+        amplitude = maximo - minimo
+        desvio = valores.std(ddof=0)
+
+        resultado[f"{prefixo}_minmax"] = (
+            (valores - minimo) / amplitude if amplitude > 0 else valores.where(
+                valores.isna(), 0.0
+            )
+        )
+        resultado[f"{prefixo}_zscore"] = (
+            (valores - valores.mean()) / desvio if desvio > 0 else valores.where(
+                valores.isna(), 0.0
+            )
+        )
+
+    return resultado
 
 
 def relacionar_tabelas(dados):
@@ -45,7 +193,6 @@ def relacionar_tabelas(dados):
     sellers = dados["sellers"]
     reviews = dados["reviews"]
 
-    # [IA] registro 2
     chaves_dos_itens = ["order_id", "order_item_id", "product_id", "seller_id"]
     if items[chaves_dos_itens].isna().any().any():
         raise ValueError("A tabela items tem identificadores vazios.")
@@ -102,7 +249,6 @@ def relacionar_tabelas(dados):
 
     return base
 
-# [IA] registro 2
 
 def construir_tabela_analitica(base):
     # Agrupa os itens para deixar uma linha por vendedor e pedido.
@@ -154,6 +300,8 @@ def construir_tabela_analitica(base):
         {
             "qtd_itens": ("order_item_id", "size"),
             "qtd_produtos_distintos": ("product_id", "nunique"),
+            "qtd_itens_preco_outlier": ("price_outlier_iqr", "sum"),
+            "qtd_itens_frete_outlier": ("freight_value_outlier_iqr", "sum"),
             "valor_produtos": ("price", lambda serie: serie.sum(min_count=1)),
             "valor_frete": (
                 "freight_value",

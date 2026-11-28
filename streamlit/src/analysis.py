@@ -1,5 +1,5 @@
 """Cálculos dos indicadores definidos na etapa 6 do notebook."""
-# [IA] registro 22
+# [IA] registro 15
 import numpy as np
 import pandas as pd
 

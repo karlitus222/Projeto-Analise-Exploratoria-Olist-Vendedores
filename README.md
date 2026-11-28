@@ -20,7 +20,7 @@ Projeto de Ciência de Dados desenvolvido para analisar o desempenho de vendedor
 - [Como executar no Google Colab](#como-executar-no-google-colab)
 - [Como usar o pipeline](#como-usar-o-pipeline)
 - [Dashboard](#dashboard)
-- [Testes](#testes)
+- [Validação](#validação)
 - [Tecnologias utilizadas](#tecnologias-utilizadas)
 - [Cuidados metodológicos](#cuidados-metodológicos)
 - [Fonte dos dados](#fonte-dos-dados)
@@ -44,7 +44,7 @@ As três perguntas de negócio são:
 ## Links
 
 - **Base de dados:** [Brazilian E-Commerce Public Dataset by Olist no Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
-- **Painel publicado:** a publicação do painel ainda depende da configuração do endereço definitivo no Streamlit; enquanto isso, ele pode ser executado localmente conforme as instruções abaixo.
+- **Painel publicado:** [Painel no Streamlit](https://olist-vendedores-grupo04.streamlit.app/)
 
 ## Objetivo
 
@@ -59,8 +59,10 @@ As três perguntas de negócio são:
 
 - Diagnóstico de colunas, valores ausentes, chaves, datas e valores atípicos.
 - Limpeza e padronização das bases brutas.
+- Sinalização de outliers de preço e frete pelo IQR, sem exclusão automática.
 - Relacionamentos com validação de cardinalidade e auditoria.
 - Geração da tabela analítica `tabela_vendedor_pedido.csv`.
+- Codificação one-hot de estado/status e normalização MinMax/Z-score de atraso de despacho e valor total.
 - Filtros por estado, categoria, vendedor e período.
 - Ranking de vendedores por taxa de atraso no despacho.
 - Comparação entre situação do despacho e avaliações recebidas.
@@ -83,8 +85,7 @@ Projeto-Analise-Exploratoria-Olist-Vendedores/
 ├── streamlit/
 │   ├── app.py                    # Entrada do dashboard
 │   ├── pages/                    # Páginas das perguntas do briefing
-│   ├── src/                      # Carga, métricas, gráficos e apresentação
-│   └── tests/                    # Testes automatizados do painel
+│   └── src/                      # Carga, métricas, gráficos e apresentação
 ├── requirements.txt
 ├── uso_de_ia.md                  # Registro das contribuições assistidas
 └── README.md
@@ -149,7 +150,15 @@ tabela = preprocessar(
 )
 ```
 
-Os argumentos devem ser DataFrames carregados dos cinco CSVs utilizados na análise. A função realiza a limpeza, os relacionamentos, a construção da tabela analítica e a exportação do resultado para `tabelas_analiticas/`.
+Os argumentos devem ser DataFrames carregados dos cinco CSVs utilizados na análise. A função:
+
+- remove duplicatas exatas e converte textos vazios em valores ausentes, sem preencher nulos com zero;
+- converte datas e colunas numéricas e marca valores fora dos limites definidos como ausentes;
+- sinaliza valores extremos de preço e frete pelo critério IQR, sem removê-los;
+- relaciona pedidos, itens, produtos, vendedores e avaliações e calcula indicadores na granularidade vendedor–pedido;
+- adiciona codificação one-hot para estado/status e versões MinMax e Z-score de atraso de despacho e valor total.
+
+O resultado completo, mantendo também as colunas originais, é gravado em `tabelas_analiticas/tabela_vendedor_pedido.csv`.
 
 ## Dashboard
 
@@ -167,10 +176,10 @@ O CSV utilizado pelo painel é `tabelas_analiticas/tabela_vendedor_pedido.csv`. 
 ## Processo de tratamento dos dados
 
 1. **Carregamento:** leitura dos CSVs de clientes, pedidos, itens, produtos, vendedores e avaliações.
-2. **Limpeza:** padronização de nomes e tipos, conversão de datas, tratamento de valores ausentes e identificação de registros inválidos.
+2. **Limpeza:** remoção de duplicatas exatas, conversão de textos vazios em ausentes, padronização de textos, conversão de datas e números, validação de limites e sinalização de outliers por IQR.
 3. **Relacionamento:** junção das tabelas por suas chaves, com validação de cardinalidade, cobertura e duplicidades.
 4. **Agregação:** avaliações são consolidadas por pedido e os itens são relacionados ao vendedor responsável.
-5. **Tabela analítica:** construção de uma linha por vendedor–pedido, com indicadores de despacho, entrega, avaliação e participação de múltiplos vendedores.
+5. **Tabela analítica:** construção de uma linha por vendedor–pedido, com indicadores de despacho, entrega, avaliação, participação de múltiplos vendedores e contagens de itens sinalizados como outliers; também inclui codificações categóricas e atributos normalizados.
 6. **Análise:** cálculo das taxas de atraso, notas médias, proporção de avaliações baixas e classificações de acompanhamento.
 7. **Publicação:** exportação dos CSVs analíticos e leitura da tabela final pelo dashboard, que recalcula os indicadores conforme os filtros.
 
@@ -191,16 +200,11 @@ O CSV utilizado pelo painel é `tabelas_analiticas/tabela_vendedor_pedido.csv`. 
 - A relação observada indica associação entre atraso e avaliação, mas não prova que o atraso tenha causado diretamente a nota baixa.
 - Os critérios de acompanhamento usam pelo menos **20 despachos avaliáveis**, **10 pedidos com avaliação** e limite de **20%** para atraso ou avaliação baixa. Na análise original, 811 vendedores atingiram os mínimos; 591 foram classificados com algum nível de atenção.
 
-Para validar alterações no painel:
+## Validação
 
-```powershell
-cd streamlit
-.\.venv\Scripts\python.exe -m pytest -q
-```
+A validação da pipeline é feita pelo notebook `notebooks/01_Preparacao_Dados_Olist.ipynb`. Execute as células em ordem; na etapa 5, a função `preprocessar()` recebe as cinco bases brutas, exibe as contagens da tabela vendedor–pedido e mostra uma amostra do resultado, além de gravar o CSV final.
 
-## Testes
-
-Os testes automatizados do dashboard ficam em `streamlit/tests/test_dashboard.py` e cobrem fórmulas, filtros, limites de classificação e páginas. A análise das relações entre as tabelas também inclui verificações de cobertura, duplicidade e cardinalidade no notebook e nos artefatos gerados.
+Para validar o dashboard manualmente, execute-o conforme as instruções acima e confira as páginas, filtros, tabelas e gráficos. O repositório atualmente não inclui a pasta de testes automatizados do Streamlit.
 
 ## Tecnologias utilizadas
 

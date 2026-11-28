@@ -1,5 +1,5 @@
 """Labels e conclusões de negócio alinhadas à etapa 6 do notebook."""
-# [IA] registro 22
+# [IA] registro 15
 from .analysis import delay_ranking
 
 ORIGINAL_CONCLUSIONS = {

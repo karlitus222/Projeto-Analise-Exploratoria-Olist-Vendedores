@@ -1,8 +1,13 @@
+# [IA] registro 2 e 16
+
 from pathlib import Path
 
+
 from .funcoes import (
+    codificar_atributos,
     construir_tabela_analitica,
     limpar_dados,
+    normalizar_atributos,
     relacionar_tabelas,
 )
 
@@ -27,6 +32,8 @@ def preprocessar(
     dados_limpos = limpar_dados(dados_brutos)
     base_itens = relacionar_tabelas(dados_limpos)
     tabela_analitica = construir_tabela_analitica(base_itens)
+    tabela_analitica = codificar_atributos(tabela_analitica)
+    tabela_analitica = normalizar_atributos(tabela_analitica)
 
     pasta_tabelas = Path(pasta_saida) / "tabelas_analiticas"
     pasta_tabelas.mkdir(parents=True, exist_ok=True)

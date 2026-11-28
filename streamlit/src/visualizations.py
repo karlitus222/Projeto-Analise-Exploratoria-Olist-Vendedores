@@ -1,5 +1,5 @@
 """Gráficos interativos dos indicadores da etapa 6."""
-# [IA] registro 22
+# [IA] registro 15
 import altair as alt
 
 from .presentation import seller_label
