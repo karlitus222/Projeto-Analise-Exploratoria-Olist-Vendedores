@@ -44,7 +44,7 @@ As três perguntas de negócio são:
 ## Links
 
 - **Base de dados:** [Brazilian E-Commerce Public Dataset by Olist no Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce).
-- **Painel publicado:** a publicação do painel ainda depende da configuração do endereço definitivo no Streamlit; enquanto isso, ele pode ser executado localmente conforme as instruções abaixo.
+- **Painel publicado:** [Gestão de Vendedores Parceiros — Grupo 04](https://olist-vendedores-grupo04.streamlit.app/).
 
 ## Objetivo
 
