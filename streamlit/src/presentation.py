@@ -1,59 +1,111 @@
-"""Nomes demonstrativos e sínteses calculadas para o recorte exibido."""
-# [IA] registro 13
-from .analysis import review_comparison, monitoring_metrics
+"""Labels e conclusões de negócio alinhadas à etapa 6 do notebook."""
+# [IA] registro 22
+from .analysis import delay_ranking
 
-SELLER_NAMES = {'47efca563408aae19bb7206c2d969ea9': 'Loja Aurora'}
+ORIGINAL_CONCLUSIONS = {
+    "atrasos": (
+        "Na análise original, 811 vendedores tinham pelo menos 20 despachos "
+        "avaliáveis. As maiores taxas foram: ID 48efc9d9 (PR; 28 de 33; "
+        "84,85%), ID 835f0f78 (SP; 31 de 42; 73,81%) e ID a7f13822 "
+        "(SP; 45 de 75; 60,00%). "
+        "O ranking destaca os maiores percentuais observados; não significa "
+        "que essa proporção de vendedores concentre todos os problemas."
+    ),
+    "avaliacoes": (
+        "Sim, os pedidos avaliados com atraso tiveram notas piores na análise "
+        "original: média 3,67 contra 4,16 nos pedidos sem atraso. A proporção "
+        "de notas médias de 1 ou 2 foi 24,50% contra 12,80%. A diferença "
+        "indica associação, mas não prova que o atraso causou a nota baixa."
+    ),
+    "criterios": (
+        "Na análise original, 811 vendedores atingiram os mínimos definidos: "
+        "20 despachos avaliáveis e 10 pedidos com nota. Desses, 591 ficaram "
+        "em acompanhamento regular, 172 em advertência e 48 em revisão "
+        "prioritária. Os limites são propostas para orientar a análise, não "
+        "uma decisão automática sobre o vendedor."
+    ),
+}
 
 
-def seller_name(seller_id):
-    return SELLER_NAMES.get(str(seller_id), 'Loja ' + str(seller_id)[:8])
+def seller_label(row):
+    city = str(row.get("seller_city", "")).strip()
+    state = str(row.get("seller_state", "")).strip()
+    seller_id = str(row.get("seller_id", ""))
+    location = ", ".join(part for part in (city.title(), state) if part)
+    if location:
+        return f"{location} · {seller_id[:8]}"
+    return seller_id
 
 
-def named_metrics(metrics):
-    result = metrics.copy()
-    result['seller_name'] = result.seller_id.map(seller_name)
-    return result
-
-
-def business_summary(page, data, metrics):
+def business_summary(page, data, metrics, comparison, monitored):
     if data.empty:
-        return ('O período selecionado tem 0 pedidos registrados na base do PI. '
-                'Sem registros, não é possível avaliar atrasos, satisfação ou critérios de acompanhamento. '
-                'Isso indica ausência de dados neste recorte, e não comprova ausência de vendas fora desta base.')
-    eligible = data[data.eligible_dispatch]
-    count = len(eligible)
-    late = int(eligible.dispatch_late.sum())
-    if page == 'atrasos':
-        if not count:
-            return 'Não há despachos elegíveis neste recorte para avaliar o cumprimento dos prazos.'
-        rate = f'{late / count:.1%}'.replace('.', ',')
-        names = ', '.join(metrics.seller_id.map(seller_name))
-        return (f'No recorte do PI, {names} reúne {count} despachos elegíveis, com {late} atrasos ({rate}). '
-                'Há somente um vendedor nesta base do estado; não é possível comparar parceiros. '
-                'O resultado descreve esta amostra e não comprova o desempenho de todos os vendedores do Piauí.')
-    if page == 'avaliacoes':
-        reviewed = data[data.eligible_review]
-        if reviewed.empty:
-            return 'Não há avaliações elegíveis neste recorte para analisar a satisfação dos clientes.'
-        mean = f'{reviewed.review_score.mean():.2f}'.replace('.', ',')
-        groups = review_comparison(data)
-        if len(groups) < 2:
-            return (f'A nota média é {mean}, calculada em {len(reviewed)} pedidos avaliados. '
-                    'Não é possível comparar avaliações de despachos com e sem atraso, pois o recorte não contém os dois grupos. '
-                    'Não podemos concluir, a partir desta amostra, que atrasos provocam notas piores.')
-        return (f'O recorte contém {len(reviewed)} pedidos avaliados e nota média {mean}. '
-                'A tabela e o gráfico comparam os grupos com e sem atraso. Essa comparação é descritiva e não prova causalidade.')
-    if page == 'criterios':
-        recent, start, end = monitoring_metrics(data)
-        if recent.empty:
-            return 'Não há registros suficientes na janela histórica para calcular os critérios de acompanhamento.'
-        tad = int(recent.above_tad_limit.sum())
-        score = int(recent.below_score_floor.sum())
-        orders = int(recent.eligible_orders.sum())
-        dispatch_label = 'despacho elegível' if orders == 1 else 'despachos elegíveis'
-        return (f'Na janela de {start:%d/%m/%Y} a {end:%d/%m/%Y}, há {orders} {dispatch_label}: '
-                f'{tad} vendedores acima de 10% de atraso e {score} com nota média abaixo de 3,8. '
-                'Esses critérios servem para acompanhamento. A amostra é pequena e os registros devem ser conferidos antes de qualquer advertência.')
-    return (f'Este recorte reúne {data.order_id.nunique()} pedidos do PI e {metrics.seller_id.nunique()} vendedor. '
-            'Os nomes exibidos são fictícios e servem apenas à demonstração. '
-            'Use os filtros e os gráficos para examinar os registros; os IDs originais continuam disponíveis nas tabelas e nos detalhes.')
+        return (
+            "Não há pedidos neste recorte. Ajuste os filtros para consultar "
+            "outros estados, categorias ou períodos."
+        )
+
+    if page == "atrasos":
+        ranked = delay_ranking(metrics)
+        if ranked.empty:
+            return (
+                "Nenhum vendedor atingiu 20 despachos avaliáveis no recorte. "
+                "Não há volume suficiente para formar um ranking confiável."
+            )
+        leaders = ranked.head(3)
+        details = "; ".join(
+            f"{seller_label(row)}: {int(row['pedidos_com_atraso_despacho'])} "
+            f"de {int(row['pedidos_despacho_avaliavel'])} pedidos "
+            f"({row['taxa_atraso_despacho_pct']:.1f}%)"
+            for _, row in leaders.iterrows()
+        )
+        return f"Maiores taxas de atraso no recorte: {details}."
+
+    if page == "avaliacoes":
+        available = comparison.dropna(subset=["nota_media"])
+        if available.empty:
+            return "Não há pedidos com avaliação e situação de despacho conhecida."
+        if len(available) < 2:
+            group = available.iloc[0]["situacao"]
+            return (
+                f"Há dados somente para o grupo “{group}”. Sem o grupo oposto, "
+                "não é possível comparar notas neste recorte."
+            )
+        late = available.set_index("situacao").loc["Com atraso no despacho"]
+        on_time = available.set_index("situacao").loc["Sem atraso no despacho"]
+        direction = (
+            "menor"
+            if late["nota_media"] < on_time["nota_media"]
+            else "maior ou igual"
+        )
+        return (
+            f"Neste recorte, a nota média dos pedidos com atraso é "
+            f"{late['nota_media']:.2f}, {direction} à dos pedidos sem atraso "
+            f"({on_time['nota_media']:.2f}). Notas 1 ou 2 representam "
+            f"{late['taxa_nota_baixa_pct']:.1f}% no grupo com atraso e "
+            f"{on_time['taxa_nota_baixa_pct']:.1f}% no grupo sem atraso. "
+            "A comparação é descritiva e não comprova causalidade."
+        )
+
+    if page == "criterios":
+        if monitored.empty:
+            return (
+                "Nenhum vendedor atingiu simultaneamente os mínimos de "
+                "20 despachos avaliáveis e 10 pedidos com nota."
+            )
+        counts = monitored["classificacao"].value_counts()
+        regular = int(counts.get("Acompanhamento regular", 0))
+        warning = int(counts.get("Advertência", 0))
+        priority = int(counts.get("Revisão prioritária", 0))
+        return (
+            f"Entre {len(monitored)} vendedores com dados suficientes, "
+            f"{regular} ficam em acompanhamento regular, {warning} atingem "
+            "ao menos um limite de atenção e "
+            f"{priority} atingem os dois. Use os critérios como sinal para "
+            "revisão dos registros, não como punição automática."
+        )
+
+    return (
+        f"O recorte contém {data['order_id'].nunique():,} pedidos e "
+        f"{metrics['seller_id'].nunique():,} vendedores. Consulte as três "
+        "páginas para comparar os mesmos indicadores da etapa 6."
+    )

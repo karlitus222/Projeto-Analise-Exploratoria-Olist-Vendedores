@@ -231,30 +231,3 @@ def construir_tabela_analitica(base):
     )
     tabela.loc[tabela["nota_media_pedido"].isna(), "flag_nota_baixa"] = pd.NA
     return tabela
-
-# [IA] registro 2
-def resumir_vendedores(tabela):
-    # Calcula os indicadores principais para cada vendedor.
-    resumo = tabela.groupby("seller_id", as_index=False).agg(
-        seller_state=("seller_state", "first"),
-        qtd_pedidos=("order_id", "nunique"),
-        qtd_itens=("qtd_itens", "sum"),
-        pedidos_despacho_avaliavel=("despacho_avaliavel", "sum"),
-        pedidos_com_atraso_despacho=("flag_atraso_despacho", "sum"),
-        atraso_medio_despacho_dias=("atraso_despacho_dias", "mean"),
-        pedidos_com_nota=("nota_media_pedido", "count"),
-        nota_media=("nota_media_pedido", "mean"),
-        pedidos_nota_baixa=("flag_nota_baixa", "sum"),
-        pedidos_multivendedor=("pedido_multivendedor", "sum"),
-    )
-    resumo["taxa_atraso_despacho_pct"] = (
-        100
-        * resumo["pedidos_com_atraso_despacho"]
-        / resumo["pedidos_despacho_avaliavel"].replace(0, float("nan"))
-    )
-    resumo["taxa_nota_baixa_pct"] = (
-        100
-        * resumo["pedidos_nota_baixa"]
-        / resumo["pedidos_com_nota"].replace(0, float("nan"))
-    )
-    return resumo

@@ -1,3 +1,3 @@
-# [IA] registro 2
+# [IA] registro 5
 from src.dashboard import render
 render('atrasos')

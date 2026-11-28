@@ -1,63 +1,111 @@
-"""Gráficos interativos do painel; os cálculos ficam em analysis.py."""
-# [IA] registro 13
+"""Gráficos interativos dos indicadores da etapa 6."""
+# [IA] registro 22
 import altair as alt
-from .presentation import named_metrics
+
+from .presentation import seller_label
 
 
 def ranking_chart(metrics):
-    data = named_metrics(metrics.head(12))
-    data['late_percent'] = data.late_rate * 100
-    selection = alt.selection_point(fields=['seller_id'], name='vendedor_destacado')
+    data = metrics.head(12).copy()
+    data["vendedor"] = data.apply(seller_label, axis=1)
+    data["taxa_atraso"] = data["taxa_atraso_despacho_pct"]
+    selection = alt.selection_point(fields=["seller_id"], name="vendedor_destacado")
     base = alt.Chart(data).encode(
-        x=alt.X('late_percent:Q', title='Despachos atrasados (%)', scale=alt.Scale(domain=[0, 100])),
-        y=alt.Y('seller_name:N', title='Vendedor (nome fictício)', sort='-x'),
-        tooltip=[alt.Tooltip('seller_name:N', title='Vendedor'), alt.Tooltip('seller_id:N', title='ID original'),
-            alt.Tooltip('eligible_orders:Q', title='Pedidos elegíveis'), alt.Tooltip('late_orders:Q', title='Atrasos'),
-            alt.Tooltip('late_percent:Q', title='Taxa de atraso (%)', format='.2f')],
-        opacity=alt.condition(selection, alt.value(1), alt.value(.3)))
-    return (base.mark_bar(color='#087F8C') + base.mark_point(color='#087F8C', filled=True, size=110)).add_params(
-        selection).properties(height=170).interactive(bind_y=False)
+        x=alt.X(
+            "taxa_atraso:Q",
+            title="Pedidos com atraso (%)",
+            scale=alt.Scale(domain=[0, 100]),
+        ),
+        y=alt.Y("vendedor:N", title="Vendedor (município e ID)", sort="-x"),
+        tooltip=[
+            alt.Tooltip("vendedor:N", title="Vendedor"),
+            alt.Tooltip("seller_id:N", title="ID completo"),
+            alt.Tooltip(
+                "pedidos_com_atraso_despacho:Q", title="Pedidos com atraso"
+            ),
+            alt.Tooltip(
+                "pedidos_despacho_avaliavel:Q", title="Pedidos avaliáveis"
+            ),
+            alt.Tooltip("taxa_atraso:Q", title="Taxa de atraso (%)", format=".2f"),
+        ],
+        opacity=alt.condition(selection, alt.value(1), alt.value(0.35)),
+    )
+    return (
+        (base.mark_bar(color="#087F8C") + base.mark_point(color="#087F8C", size=90))
+        .add_params(selection)
+        .properties(height=300)
+        .interactive(bind_y=False)
+    )
 
 
 def review_chart(comparison):
-    data = comparison.copy()
-    data['dispatch_group'] = data.dispatch_late.map({0: 'Em prazo', 1: 'Com atraso'})
-    selection = alt.selection_point(fields=['dispatch_group'], name='grupo_destacado')
-    return alt.Chart(data).mark_bar(size=70).encode(
-        x=alt.X('dispatch_group:N', title='Despacho'),
-        y=alt.Y('mean_score:Q', title='Nota média', scale=alt.Scale(domain=[0, 5])),
-        color=alt.Color('dispatch_group:N', title='Despacho', scale=alt.Scale(
-            domain=['Em prazo', 'Com atraso'], range=['#087F8C', '#E58F37'])),
-        opacity=alt.condition(selection, alt.value(1), alt.value(.3)),
-        tooltip=[alt.Tooltip('dispatch_group:N', title='Despacho'),
-            alt.Tooltip('review_count:Q', title='Pedidos avaliados'),
-            alt.Tooltip('mean_score:Q', title='Nota média', format='.2f')]
-    ).add_params(selection).properties(height=280).interactive(bind_x=False)
+    data = comparison.dropna(subset=["nota_media"]).copy()
+    selection = alt.selection_point(fields=["situacao"], name="grupo_destacado")
+    return (
+        alt.Chart(data)
+        .mark_bar(size=70)
+        .encode(
+            x=alt.X("situacao:N", title="Situação do despacho"),
+            y=alt.Y(
+                "nota_media:Q",
+                title="Nota média por pedido",
+                scale=alt.Scale(domain=[0, 5]),
+            ),
+            color=alt.Color(
+                "situacao:N",
+                title="Situação",
+                scale=alt.Scale(
+                    domain=["Sem atraso no despacho", "Com atraso no despacho"],
+                    range=["#087F8C", "#E58F37"],
+                ),
+            ),
+            opacity=alt.condition(selection, alt.value(1), alt.value(0.35)),
+            tooltip=[
+                alt.Tooltip("situacao:N", title="Situação"),
+                alt.Tooltip("qtd_pedidos:Q", title="Pedidos avaliados"),
+                alt.Tooltip("nota_media:Q", title="Nota média", format=".2f"),
+                alt.Tooltip(
+                    "taxa_nota_baixa_pct:Q", title="Notas 1 ou 2 (%)", format=".2f"
+                ),
+            ],
+        )
+        .add_params(selection)
+        .properties(height=300)
+        .interactive(bind_x=False)
+    )
 
 
-def monthly_chart(monthly):
-    data = monthly.reset_index().copy()
-    data['late_percent'] = data['mean'] * 100
-    return alt.Chart(data).mark_line(point=True, color='#087F8C').encode(
-        x=alt.X('purchase_month:O', title='Mês da compra'),
-        y=alt.Y('late_percent:Q', title='Atrasos (%)', scale=alt.Scale(domain=[0, 100])),
-        tooltip=[alt.Tooltip('purchase_month:O', title='Mês'),
-            alt.Tooltip('count:Q', title='Pedidos elegíveis'),
-            alt.Tooltip('late_percent:Q', title='Atrasos (%)', format='.2f')]
-    ).properties(height=270).interactive(bind_x=False)
-
-
-def seller_scatter(metrics):
-    data = named_metrics(metrics.dropna(subset=['mean_score', 'late_rate']))
-    data['late_percent'] = data.late_rate * 100
-    selection = alt.selection_point(fields=['seller_id'], name='parceiro_destacado')
-    return alt.Chart(data).mark_circle(size=180).encode(
-        x=alt.X('late_percent:Q', title='Atrasos (%)', scale=alt.Scale(domain=[0, 100])),
-        y=alt.Y('mean_score:Q', title='Nota média', scale=alt.Scale(domain=[0, 5])),
-        color=alt.value('#087F8C'),
-        opacity=alt.condition(selection, alt.value(1), alt.value(.3)),
-        tooltip=[alt.Tooltip('seller_name:N', title='Vendedor'), alt.Tooltip('seller_id:N', title='ID original'),
-            alt.Tooltip('review_count:Q', title='Pedidos avaliados'),
-            alt.Tooltip('late_percent:Q', title='Atrasos (%)', format='.2f'),
-            alt.Tooltip('mean_score:Q', title='Nota média', format='.2f')]
-    ).add_params(selection).properties(height=270).interactive()
+def criteria_chart(monitored):
+    counts = (
+        monitored["classificacao"]
+        .value_counts()
+        .rename_axis("classificacao")
+        .reset_index(name="vendedores")
+    )
+    selection = alt.selection_point(
+        fields=["classificacao"], name="criterio_destacado"
+    )
+    return (
+        alt.Chart(counts)
+        .mark_bar(color="#087F8C")
+        .encode(
+            x=alt.X("vendedores:Q", title="Quantidade de vendedores"),
+            y=alt.Y(
+                "classificacao:N",
+                title="Resultado dos critérios",
+                sort=[
+                    "Revisão prioritária",
+                    "Advertência",
+                    "Acompanhamento regular",
+                ],
+            ),
+            opacity=alt.condition(selection, alt.value(1), alt.value(0.35)),
+            tooltip=[
+                alt.Tooltip("classificacao:N", title="Classificação"),
+                alt.Tooltip("vendedores:Q", title="Vendedores"),
+            ],
+        )
+        .add_params(selection)
+        .properties(height=190)
+        .interactive(bind_y=False)
+    )

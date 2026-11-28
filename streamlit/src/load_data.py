@@ -1,5 +1,5 @@
 """Carga dos cinco arquivos originais, sem ajustes manuais."""
-# [IA] registro 3
+# [IA] registro 6
 from pathlib import Path
 import pandas as pd
 
